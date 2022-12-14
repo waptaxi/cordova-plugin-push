@@ -135,6 +135,10 @@ class PushPlugin : CordovaPlugin() {
                   additionalData.put(key, value)
                 }
               }
+              
+              value is Number -> {
+                additionalData.put(key, value)
+              }
             }
           }
 
