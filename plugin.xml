@@ -4,7 +4,7 @@
   id="@havesource/cordova-plugin-push" version="4.0.0-dev.0">
 
   <name>Cordova Push Plugin</name>
-  <description>Enable receiving push notifications on Android, iOS and Windows devices. Android uses Firebase Cloud Messaging. iOS uses Apple APNS Notifications. Windows uses Microsoft WNS Notifications.</description>
+  <description>Enable receiving push notifications on Android and iOS devices. Android uses Firebase Cloud Messaging. iOS uses Apple APNS Notifications.</description>
 
   <license>MIT</license>
 
@@ -132,15 +132,4 @@
     </podspec>
   </platform>
 
-  <platform name="windows">
-    <hook type="after_plugin_install" src="hooks/windows/setToastCapable.js"/>
-
-    <js-module src="src/windows/PushPluginProxy.js" name="PushPlugin">
-      <runs/>
-    </js-module>
-
-    <config-file target="config.xml" parent="/*">
-      <preference name="WindowsToastCapable" value="true"/>
-    </config-file>
-  </platform>
 </plugin>
