@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.tasks.Tasks
@@ -445,9 +446,9 @@ class PushPlugin : CordovaPlugin() {
     pushContext = callbackContext
     pluginInitData = data;
 
-    var hasPermission = checkForPostNotificationsPermission()
-    if (!hasPermission)
+    if (!checkForPostNotificationsPermission()) {
       return
+    }
 
     cordova.threadPool.execute(Runnable {
       Log.v(TAG, formatLogMessage("Data=$data"))
@@ -490,9 +491,12 @@ class PushPlugin : CordovaPlugin() {
         } catch (e: InterruptedException) {
           Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
           null
+        } catch (e: Exception) {
+          Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
+          null
         }
 
-        if (token != "") {
+        if (token != null && token != "") {
           val registration = JSONObject().put(PushConstants.REGISTRATION_ID, token).apply {
             put(PushConstants.REGISTRATION_TYPE, PushConstants.FCM)
           }
@@ -516,6 +520,9 @@ class PushPlugin : CordovaPlugin() {
       } catch (e: NotFoundException) {
         Log.e(TAG, formatLogMessage("Resources NotFoundException Exception ${e.message}"))
         callbackContext.error(e.message)
+      } catch (e: Exception) {
+        Log.e(TAG, formatLogMessage("Unexpected Exception ${e.message}"))
+        callbackContext.error("An unexpected error occurred: ${e.message}")
       }
 
       jo?.let {
@@ -616,8 +623,13 @@ class PushPlugin : CordovaPlugin() {
 
   private fun checkForPostNotificationsPermission(): Boolean {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      if (!PermissionHelper.hasPermission(this, Manifest.permission.POST_NOTIFICATIONS))
-      {
+      if (!PermissionHelper.hasPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.POST_NOTIFICATIONS
+          )) {
+          return false
+        }
         PermissionHelper.requestPermission(
           this,
           REQ_CODE_INITIALIZE_PLUGIN,
@@ -626,7 +638,6 @@ class PushPlugin : CordovaPlugin() {
         return false
       }
     }
-
     return true
   }
 
@@ -680,6 +691,9 @@ class PushPlugin : CordovaPlugin() {
       } catch (e: InterruptedException) {
         Log.e(TAG, formatLogMessage("Interrupted ${e.message}"))
         callbackContext.error(e.message)
+      } catch (e: Exception) {
+        Log.e(TAG, formatLogMessage("Unexpected Exception ${e.message}"))
+        callbackContext.error(e.message)
       }
     }
   }
@@ -707,6 +721,8 @@ class PushPlugin : CordovaPlugin() {
       } catch (e: UnknownError) {
         callbackContext.error(e.message)
       } catch (e: JSONException) {
+        callbackContext.error(e.message)
+      } catch (e: Exception) {
         callbackContext.error(e.message)
       }
     }
